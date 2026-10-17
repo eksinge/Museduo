@@ -32,7 +32,7 @@ Sign in manually in the dedicated Chrome window. Other conversations can use oth
 
 ## 给 Codex / Claude Code / For coding agents
 
-If the user sent this URL and requested this feature, read **[AGENTS.md](AGENTS.md)**, **[INSTALL.md](INSTALL.md)** and **[FUNCTIONALITY.md](FUNCTIONALITY.md)**, then complete the requested local installation. Claude Code should also read **[CLAUDE.md](CLAUDE.md)**. Follow the user's actual request and host permissions.
+If the user sent this URL and requested this feature, read **[AGENTS.md](AGENTS.md)**, **[INSTALL.md](INSTALL.md)** and **[FUNCTIONALITY.md](FUNCTIONALITY.md)**, then complete the requested local installation. Claude Code should also read **[CLAUDE.md](CLAUDE.md)**. Opening a URL does not automatically load those files: fetch and read them explicitly. If GitHub's page view omits file contents, start with the **[raw installation guide](https://raw.githubusercontent.com/eksinge/Museduo/main/INSTALL.md)**, or download the **[repository ZIP](https://github.com/eksinge/Museduo/archive/refs/heads/main.zip)**. Follow the user's actual request and host permissions.
 
 The repository includes a Codex plugin installer and a standalone Claude Code skill installer. Reuse the implementation, adapt it or rewrite it locally when needed; preserve the full behavior contract and the name Museduo. Complete host discovery and browser verification before calling installation finished.
 

@@ -48,15 +48,19 @@ node scripts/install.mjs --host claude
 
 This installs a self-contained personal skill at `~/.claude/skills/museduo` (or under `CLAUDE_CONFIG_DIR/skills/museduo` when the user configures that directory). It keeps the wrapper, pinned package files and host-specific SKILL.md together, and does not modify settings.json. A compatibility manifest also lets current Claude Code versions recognize it as a skills-directory plugin named Museduo. Re-running updates a Museduo-owned installation; an unrelated existing skill at that path is left intact and reported.
 
-Invoke `/museduo` in Claude Code (or `/museduo:museduo` if the host displays the plugin namespace). Its commands use the host-expanded values:
+Invoke `/museduo` in Claude Code (or `/museduo:museduo` if the host displays the plugin namespace). Use the commands from the skill the host actually loads.
+
+**Plugin mode (the supplied manifest):** the loaded skill is `<installation root>/skills/museduo/SKILL.md`, while the scripts are under the installation root. Use `${CLAUDE_PLUGIN_ROOT}`, not the nested skill directory:
 
 ```text
-node "${CLAUDE_SKILL_DIR}/scripts/muse.mjs" --claude-session-id "${CLAUDE_SESSION_ID}" info
-node "${CLAUDE_SKILL_DIR}/scripts/muse.mjs" --claude-session-id "${CLAUDE_SESSION_ID}" doctor
-node "${CLAUDE_SKILL_DIR}/scripts/muse.mjs" --claude-session-id "${CLAUDE_SESSION_ID}" open
+node "${CLAUDE_PLUGIN_ROOT}/scripts/muse.mjs" --claude-session-id "${CLAUDE_SESSION_ID}" info
+node "${CLAUDE_PLUGIN_ROOT}/scripts/muse.mjs" --claude-session-id "${CLAUDE_SESSION_ID}" doctor
+node "${CLAUDE_PLUGIN_ROOT}/scripts/muse.mjs" --claude-session-id "${CLAUDE_SESSION_ID}" open
 ```
 
-The variables above are substituted when Claude Code loads a skill. The plugin-packaged variant uses `${CLAUDE_PLUGIN_ROOT}` for the wrapper's installation root, while the personal-skill fallback uses `${CLAUDE_SKILL_DIR}`. They are not literal placeholders to copy into an ordinary shell and are not guaranteed environment variables. If they remain literal, load/invoke the skill; if the installed host cannot provide them, update through a supported flow or adapt a documented real-session mechanism. Never replace them with a chosen ID.
+**Plain personal-skill fallback:** if the host loads `<installation root>/SKILL.md` directly, the scripts and that skill share the same root. Use its `${CLAUDE_SKILL_DIR}/scripts/muse.mjs` command prefix instead. In plugin mode, `${CLAUDE_SKILL_DIR}/scripts/muse.mjs` would point into the nested skill folder, where there is no wrapper. Do not mix these layouts.
+
+These variables are substituted when Claude Code loads a skill. They are not literal placeholders to copy into an ordinary shell and are not guaranteed environment variables. If they remain literal, load/invoke the skill; if the installed host cannot provide them, update through a supported flow or adapt a documented real-session mechanism. Never replace them with a chosen ID. When installing Claude Code from Codex (or vice versa), obtain the real session ID from the target host, not from the installing agent.
 
 ## 复刻或适配 / Adapt or reimplement
 
