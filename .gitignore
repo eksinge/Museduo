@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+CodexMuse/
+chats/
+profile/
+profiles/
+artifacts/
+playwright-report/
+test-results/
+*.log
+*.zip
