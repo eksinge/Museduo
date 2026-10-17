@@ -19,7 +19,7 @@ https://github.com/eksinge/Museduo
 
 安装并选择 **Museduo** 后，在使用它的对话中直接发送：
 
-- **`1`**：打开当前对话的 Muse 浏览器。
+- **`1`**：默认全屏打开当前对话的 Muse 浏览器，按 F11 可退出全屏。
 - **`0`**：关闭当前对话的浏览器，保留登录资料。
 
 ## How to use
@@ -37,7 +37,7 @@ Sign in manually in the dedicated Chrome window. Other conversations can use oth
 
 After installing and selecting **Museduo**, send a standalone message in that conversation:
 
-- **`1`**: open this conversation's Muse browser.
+- **`1`**: open this conversation's Muse browser in full-screen mode by default; press F11 to exit full screen.
 - **`0`**: close this conversation's browser and keep its login profile.
 
 ## 给 Codex / Claude Code / For coding agents

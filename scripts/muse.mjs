@@ -131,7 +131,8 @@ export async function main(args = process.argv.slice(2)) {
   mkdirSync(id.directory, { recursive: true, mode: 0o700 });
   mkdirSync(id.profile, { recursive: true, mode: 0o700 });
   if (command === 'open') {
-    writeFileSync(config, JSON.stringify({ browser: { browserName: 'chromium', isolated: false, userDataDir: id.profile, launchOptions: { channel: 'chrome', headless: rest.includes('--headless') }, contextOptions: { viewport: null } }, outputDir: join(id.directory, 'artifacts'), outputMode: 'stdout' }, null, 2), { mode: 0o600 });
+    const headless = rest.includes('--headless');
+    writeFileSync(config, JSON.stringify({ browser: { browserName: 'chromium', isolated: false, userDataDir: id.profile, launchOptions: { channel: 'chrome', headless, args: headless ? [] : ['--start-fullscreen'] }, contextOptions: { viewport: null } }, outputDir: join(id.directory, 'artifacts'), outputMode: 'stdout' }, null, 2), { mode: 0o600 });
     writeFileSync(join(id.directory, 'binding.json'), JSON.stringify({ threadId: id.threadId, session: id.session, profile: id.profile }, null, 2), { mode: 0o600 });
   }
   console.error(`[Muse] 当前对话 ${id.threadId} → ${id.session}`);

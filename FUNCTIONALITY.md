@@ -12,7 +12,7 @@
 | 不依赖项目路径 / Stable across directories | Changing the working directory does not change the same conversation's account binding. |
 | 新建及分叉 / New and forked chats | A new host ID gets a new profile and does not inherit the source conversation's login. |
 | 宿主隔离 / Host namespaces | Claude Code and Codex cannot collide even when their raw conversation IDs are equal. Existing Codex bindings remain compatible. |
-| 浏览器操作 / Browser operation | Open a dedicated visible Chrome window at https://muse.ai/; support snapshots, navigation, clicks, fills, keys, tab selection and screenshots. |
+| 浏览器操作 / Browser operation | Open a dedicated visible Chrome window in full-screen mode by default at https://muse.ai/, including when using an explicit URL. F11 exits full screen; headless tests remain headless. Support snapshots, navigation, clicks, fills, keys, tab selection and screenshots. |
 | 用户认证 / User authentication | The user completes passwords, CAPTCHA, verification codes and MFA. Do not capture or export credentials or copy another browser's login. |
 | 范围内关闭 / Scoped closing | Close only the current conversation's browser, preserve its profile, and leave other conversations running. |
 | 可发现的安装 / Discoverable installation | Install persistently in the requested host's supported plugin/skill location and confirm the host can find it. |
