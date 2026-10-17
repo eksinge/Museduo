@@ -22,14 +22,29 @@ export function dataRoot(env = process.env) {
   return env.MUSE_CHAT_DATA_DIR ? resolve(env.MUSE_CHAT_DATA_DIR) : join(env.LOCALAPPDATA || env.XDG_DATA_HOME || join(env.HOME || '', '.local', 'share'), 'CodexMuse');
 }
 
-export function identity(env = process.env) {
-  const threadId = env.CODEX_THREAD_ID || env.CODEX_SESSION_ID;
+export function identity(env = process.env, claudeSessionId) {
+  const host = claudeSessionId === undefined ? 'codex' : 'claude';
+  const threadId = host === 'claude' ? claudeSessionId : env.CODEX_THREAD_ID || env.CODEX_SESSION_ID;
   if (!threadId || !/^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,255}$/.test(threadId)) {
-    throw new Error('未取得有效的 CODEX_THREAD_ID。请从 Codex 对话运行；禁止回退到共享默认账号。');
+    throw new Error('未取得有效的对话 ID。Codex 使用 CODEX_THREAD_ID；Claude Code 必须通过技能传入真实 CLAUDE_SESSION_ID。禁止回退到共享默认账号。');
   }
-  const key = createHash('sha256').update(threadId).digest('hex');
+  // Keep existing Codex profiles; namespace Claude so equal IDs cannot share accounts.
+  const key = createHash('sha256').update(host === 'claude' ? `claude:${threadId}` : threadId).digest('hex');
   const base = dataRoot(env);
-  return { threadId, key, session: `muse-${key.slice(0, 24)}`, base, directory: join(base, 'chats', key), profile: join(base, 'chats', key, 'profile') };
+  return { host, threadId, key, session: `muse-${key.slice(0, 24)}`, base, directory: join(base, 'chats', key), profile: join(base, 'chats', key, 'profile') };
+}
+
+export function parseInvocation(args) {
+  const rest = [...args];
+  let claudeSessionId;
+  if (rest[0] === '--claude-session-id') {
+    rest.shift();
+    claudeSessionId = rest.shift();
+    if (!claudeSessionId || claudeSessionId.startsWith('--')) throw new Error('缺少真实的 Claude Code 会话 ID。');
+    identity({}, claudeSessionId);
+  }
+  const [command = 'help', ...commandArgs] = rest;
+  return { claudeSessionId, command, commandArgs };
 }
 
 export function cleanEnv(env) {
@@ -91,15 +106,15 @@ export async function setup(base) {
 }
 
 export async function main(args = process.argv.slice(2)) {
-  const [command = 'help', ...rest] = args;
+  const { claudeSessionId, command, commandArgs: rest } = parseInvocation(args);
   if (command === 'help' || command === '--help') {
-    console.log(`Museduo ${version}\n每个 Codex 对话自动绑定独立持久化 Chrome 资料。\n\nnode <插件路径>/scripts/muse.mjs info       查看当前对话绑定\nnode <插件路径>/scripts/muse.mjs setup      安装锁定版本运行时\nnode <插件路径>/scripts/muse.mjs doctor     检查运行时和浏览器\nnode <插件路径>/scripts/muse.mjs open       打开 Muse，首次请手动登录\nnode <插件路径>/scripts/muse.mjs snapshot   读取当前页面\nnode <插件路径>/scripts/muse.mjs click e12  点击快照中的元素\nnode <插件路径>/scripts/muse.mjs fill e9 文本\nnode <插件路径>/scripts/muse.mjs close      关闭当前对话浏览器，保留登录\n\nopen 可传 URL；open --headless 用于自动化测试。\n禁止指定其他 session/profile，禁止 close-all、kill-all、attach、delete-data。\n登录密码和验证码由用户在独立浏览器窗口输入。`);
+    console.log(`Museduo ${version}\n每个 Codex / Claude Code 对话自动绑定独立持久化 Chrome 资料。\n\nnode <插件路径>/scripts/muse.mjs info       查看当前对话绑定\nnode <插件路径>/scripts/muse.mjs setup      安装锁定版本运行时\nnode <插件路径>/scripts/muse.mjs doctor     检查运行时和浏览器\nnode <插件路径>/scripts/muse.mjs open       打开 Muse，首次请手动登录\nnode <插件路径>/scripts/muse.mjs snapshot   读取当前页面\nnode <插件路径>/scripts/muse.mjs click e12  点击快照中的元素\nnode <插件路径>/scripts/muse.mjs fill e9 文本\nnode <插件路径>/scripts/muse.mjs close      关闭当前对话浏览器，保留登录\n\nopen 可传 URL；open --headless 用于自动化测试。\nClaude Code：在所有命令前加 --claude-session-id <宿主技能展开的真实会话ID>。\n禁止指定其他 session/profile，禁止 close-all、kill-all、attach、delete-data。\n登录密码和验证码由用户在独立浏览器窗口输入。`);
     return;
   }
   if (command === 'setup') { await setup(dataRoot()); console.log('运行时已就绪。'); return; }
-  const id = identity();
+  const id = identity(process.env, claudeSessionId);
   if (command === 'info') {
-    console.log(JSON.stringify({ ...id, defaultUrl: DEFAULT_URL, runtimeInstalled: existsSync(cliPath(id.base)), mode: 'persistent-chrome-per-codex-thread' }, null, 2));
+    console.log(JSON.stringify({ ...id, defaultUrl: DEFAULT_URL, runtimeInstalled: existsSync(cliPath(id.base)), mode: `persistent-chrome-per-${id.host}-conversation` }, null, 2));
     return;
   }
   const config = join(id.directory, 'browser.json');

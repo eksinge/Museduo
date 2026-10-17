@@ -1,0 +1,9 @@
+{
+  "name": "museduo",
+  "displayName": "Museduo",
+  "version": "0.2.0",
+  "description": "Independent persistent Muse accounts for each Claude Code conversation.",
+  "author": { "name": "Gexingchi" },
+  "license": "MIT",
+  "skills": "./skills"
+}

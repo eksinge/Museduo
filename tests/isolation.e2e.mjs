@@ -10,7 +10,10 @@ import { identity } from '../scripts/muse.mjs';
 const exec = promisify(execFile);
 const pluginRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const wrapper = join(pluginRoot, 'scripts', 'muse.mjs');
-const testRoot = resolve(pluginRoot, '..', '..', 'work', `muse-isolation-${Date.now()}`);
+const hostArgs = process.argv.slice(2);
+if (hostArgs.length && (hostArgs.length !== 2 || hostArgs[0] !== '--host' || !['codex', 'claude'].includes(hostArgs[1]))) throw new Error('Use --host codex|claude');
+const host = hostArgs[1] || 'codex';
+const testRoot = resolve(process.env.MUSE_TEST_ROOT || resolve(pluginRoot, '..', '..', 'work'), `muse-isolation-${host}-${Date.now()}`);
 mkdirSync(testRoot, { recursive: true });
 mkdirSync(join(testRoot, 'other-project'), { recursive: true });
 const env = { ...process.env, MUSE_CHAT_DATA_DIR: testRoot };
@@ -38,7 +41,8 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const evidence = [];
 async function cli(thread, args, cwd = pluginRoot) {
   try {
-    const result = await exec(process.execPath, [wrapper, ...args], { env: { ...env, CODEX_THREAD_ID: thread }, cwd, windowsHide: true, timeout: 90000, maxBuffer: 4 * 1024 * 1024 });
+    const prefix = host === 'claude' ? ['--claude-session-id', thread] : [];
+    const result = await exec(process.execPath, [wrapper, ...prefix, ...args], { env: { ...env, CODEX_THREAD_ID: thread }, cwd, windowsHide: true, timeout: 90000, maxBuffer: 4 * 1024 * 1024 });
     return result.stdout;
   } catch (error) {
     throw new Error(`${thread}: ${args[0]} failed\n${error.stdout || ''}\n${error.stderr || ''}`, { cause: error });
@@ -72,11 +76,11 @@ try {
   await cli(ids[0], ['open', `${origin}/view`, '--headless'], join(testRoot, 'other-project'));
   assert.deepEqual(await state(ids[0], join(testRoot, 'other-project')), a);
   evidence.push('Reopened chat A retains all three stores after browser restart and a change of working directory.');
-  const profiles = ids.map(id => identity({ ...env, CODEX_THREAD_ID: id }).profile);
+  const profiles = ids.map(id => identity({ ...env, CODEX_THREAD_ID: id }, host === 'claude' ? id : undefined).profile);
   assert.notEqual(profiles[0], profiles[1]);
   evidence.push('Browser profile paths are distinct and deterministically derived from thread IDs.');
-  console.log(JSON.stringify({ passed: true, origin, evidence, profiles }, null, 2));
-  writeFileSync(join(testRoot, 'acceptance.json'), JSON.stringify({ passed: true, evidence, profiles }, null, 2));
+  console.log(JSON.stringify({ passed: true, host, origin, evidence, profiles }, null, 2));
+  writeFileSync(join(testRoot, 'acceptance.json'), JSON.stringify({ passed: true, host, evidence, profiles }, null, 2));
 } finally {
   for (const id of ids) { try { await cli(id, ['close']); } catch {} }
   await new Promise(ok => server.close(ok));

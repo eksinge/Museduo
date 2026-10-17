@@ -1,84 +1,51 @@
 # Museduo
 
-让 Codex 在不同的对话中打开不同的 Muse 账号。
+让 Codex / Claude Code 在不同的对话中打开不同的 Muse 账号。
 
-Let Codex open different Muse accounts in different conversations.
+Let Codex / Claude Code open different Muse accounts in different conversations.
 
-## 中文
+## 使用方法
 
-Museduo 是 Codex 本地插件，为每个对话分配独立、持久化的 Chrome 资料目录。不同对话可登录不同的 Muse 账号；恢复同一对话时会继续使用自己的登录资料，直到 Muse 要求重新认证。新建或分叉对话使用新的资料目录。
+复制此项目地址给 Codex / Claude Code，直接给 Codex / Claude Code 发：**我需要这个项目**。
 
-### 安装与使用
-
-需要 Windows、Node.js 20+（含 npm）、Google Chrome，以及支持本地插件的 Codex。
-
-1. 下载本仓库 ZIP 并解压，或运行 `git clone https://github.com/eksinge/Museduo.git`。
-2. 在 Codex 的 PowerShell 中运行：
-
-```powershell
-& '<Museduo 文件夹绝对路径>\Install.ps1'
+```text
+https://github.com/eksinge/Museduo
+我需要这个项目
 ```
 
-3. 新建 Codex 对话，选择 **Museduo**，发送：**为这个对话打开独立的 Muse 登录窗口。**
-4. 在专属 Chrome 窗口中手动登录。另一个对话重复操作，即可登录另一个账号。
+也可以说“我需要这个插件”“把这个插件迁移到我的 Codex / Claude Code 中”“在我的电脑上安装这个插件”“让我的 Codex / Claude Code 有这个插件的功能”等。目标都是在你的电脑上装好 **Museduo**，由接收请求的代理读取仓库并完成安装、适配和验证。
 
-关闭时可告诉 Codex：**关闭这个对话的 Muse 浏览器，保留登录。** 如果插件列表没有刷新，请重新启动 Codex。
+首次打开后，在专属 Chrome 窗口中手动登录 Muse。另一个对话可以登录另一个账号；恢复同一对话会复用自己的资料，直到 Muse 要求重新认证。
 
-安装脚本使用 Codex 官方 CLI 注册本地市场并安装插件。依赖通过锁文件安装，禁用 npm 生命周期脚本。
+## How to use
 
-### 隔离与隐私
+Copy this repository URL to Codex / Claude Code and send: **I need this project**.
 
-- 使用真实 `CODEX_THREAD_ID`（兼容 `CODEX_SESSION_ID`）的 SHA-256 固定浏览器会话及资料目录；缺少有效身份时拒绝运行。
-- 资料保存在本机 `%LOCALAPPDATA%\CodexMuse\chats\<hash>\profile`，不会上传至插件作者。不要将该目录上传至 GitHub。
-- 密码、验证码和 MFA 由用户手动完成；插件不会代填或导出登录凭据。
-- 通过独立 Chrome 窗口工作。这是登录状态隔离，不是操作系统安全沙箱。
-- Museduo 沿用原插件 ID `muse-chat-isolation@muse-local` 和资料路径，保留已有对话的账号绑定。
-
-### 验证与移除
-
-`npm test` 检查身份、会话隔离和绑定保护。
-`npm run test:e2e` 使用临时目录和虚构测试身份，启动真实 Chrome，验证 Cookie、localStorage、IndexedDB 隔离、重开持久化及切换工作目录后的绑定稳定性。测试不使用真实 Muse 账号。
-
-运行 `codex plugin remove muse-chat-isolation@muse-local` 卸载插件。卸载不自动删除登录资料。
-
-## English
-
-Museduo is a local Codex plugin that gives each conversation its own persistent Chrome profile. Different conversations can sign in to different Muse accounts. Resuming a conversation reuses its profile until Muse requires authentication again. New or forked conversations receive fresh profiles.
-
-### Install and use
-
-Requires Windows, Node.js 20+ with npm, Google Chrome, and Codex with local plugin support.
-
-1. Download and extract this repository, or run `git clone https://github.com/eksinge/Museduo.git`.
-2. In a Codex PowerShell terminal, run:
-
-```powershell
-& '<absolute path to Museduo>\Install.ps1'
+```text
+https://github.com/eksinge/Museduo
+I need this project
 ```
 
-3. Start a new Codex conversation, select **Museduo**, and ask: **Open a separate Muse login window for this conversation.**
-4. Sign in manually in the dedicated Chrome window. Repeat in another conversation to use another account.
+You can also ask to install this plugin, migrate it to Codex / Claude Code, or give your coding agent the same features. The agent reads the repository, installs or adapts the feature on your computer, and verifies it. The default local name is **Museduo**.
 
-To close it, ask: **Close this conversation's Muse browser and keep its login profile.** Restart Codex if the plugin list has not refreshed.
+Sign in manually in the dedicated Chrome window. Other conversations can use other Muse accounts; resuming the same conversation reuses its own profile, subject to Muse session expiry.
 
-The installer registers a local marketplace and installs the plugin through the official Codex CLI. Dependencies use a pinned lockfile with npm lifecycle scripts disabled.
+## 给 Codex / Claude Code / For coding agents
 
-### Isolation and privacy
+If the user sent this URL and requested this feature, read **[AGENTS.md](AGENTS.md)**, **[INSTALL.md](INSTALL.md)** and **[FUNCTIONALITY.md](FUNCTIONALITY.md)**, then complete the requested local installation. Claude Code should also read **[CLAUDE.md](CLAUDE.md)**. Follow the user's actual request and host permissions.
 
-- A SHA-256 hash of the real `CODEX_THREAD_ID` (or `CODEX_SESSION_ID`) determines the browser session and profile. Missing or invalid identity is rejected.
-- Profiles stay locally at `%LOCALAPPDATA%\CodexMuse\chats\<hash>\profile`. They are not sent to the plugin author. Never upload this directory to GitHub.
-- Users enter passwords, verification codes, and MFA themselves. The plugin does not enter or export login credentials.
-- The plugin uses a dedicated Chrome window. It isolates login state; it is not an operating-system security sandbox.
-- Museduo keeps the existing plugin ID `muse-chat-isolation@muse-local` and profile paths so existing conversation bindings are preserved.
+The repository includes a Codex plugin installer and a standalone Claude Code skill installer. Reuse the implementation, adapt it or rewrite it locally when needed; preserve the full behavior contract and the name Museduo. Complete host discovery and browser verification before calling installation finished.
 
-### Verify and uninstall
+## 环境与功能 / Environment and features
 
-`npm test` checks identity handling, session isolation, and binding protection.
-`npm run test:e2e` starts real Chrome with temporary profiles and synthetic identities to verify Cookie, localStorage, and IndexedDB isolation, persistence after reopening, and stable bindings across working directories. It does not use real Muse accounts.
+- 需要可操作本机文件和终端的 Codex / Claude Code、Node.js 20+（含 npm）和 Chrome。Requires local file/shell access, Node.js 20+ with npm, and Chrome.
+- Windows 已验证；其他系统由代理按本机环境适配和验证。Windows is tested; other platforms require local adaptation and verification.
+- 每个真实对话 ID 对应独立持久化资料；切换项目路径不会换账号。One persistent profile per real conversation ID, independent of the project directory.
+- 登录资料留在本机，密码及验证码由用户输入。Profiles stay local; users enter passwords and verification codes themselves.
+- Codex 保留原插件 ID `muse-chat-isolation@muse-local` 和已有资料路径；Claude Code 使用独立命名空间。Existing Codex bindings are preserved; Claude Code has a separate namespace.
 
-Run `codex plugin remove muse-chat-isolation@muse-local` to uninstall. Uninstalling does not automatically delete login profiles.
+详细安装、测试和适配步骤见 [INSTALL.md](INSTALL.md)。Detailed installation, verification and adaptation instructions are in [INSTALL.md](INSTALL.md).
 
-## Dependencies and license / 依赖与许可
+## License / 许可
 
-- [Microsoft Playwright CLI](https://github.com/microsoft/playwright-cli), pinned to `@playwright/cli@0.1.22`.
-- MIT license. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+MIT. Uses pinned [Microsoft Playwright CLI](https://github.com/microsoft/playwright-cli). See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

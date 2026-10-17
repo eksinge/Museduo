@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { identity, browserArgs, cleanEnv, DEFAULT_URL, dependencyKey } from '../scripts/muse.mjs';
+import { createHash } from 'node:crypto';
+import { identity, parseInvocation, browserArgs, cleanEnv, DEFAULT_URL, dependencyKey } from '../scripts/muse.mjs';
 
 test('two chats in one workspace have distinct persistent profiles and session names', () => {
   const a = identity({ CODEX_THREAD_ID: 'chat-a', LOCALAPPDATA: 'C:/local' });
@@ -15,6 +16,27 @@ test('missing or path-injecting identity fails closed', () => {
 test('host thread ID wins over session fallback', () => {
   assert.equal(identity({ CODEX_THREAD_ID: 'thread', CODEX_SESSION_ID: 'session' }).threadId, 'thread');
   assert.equal(identity({ CODEX_SESSION_ID: 'legacy' }).threadId, 'legacy');
+});
+test('existing Codex hash is unchanged and Claude cannot collide with it', () => {
+  const env = { CODEX_THREAD_ID: 'same-id', LOCALAPPDATA: 'C:/local' };
+  const codex = identity(env);
+  const claude = identity(env, 'same-id');
+  assert.equal(codex.key, createHash('sha256').update('same-id').digest('hex'));
+  assert.equal(claude.host, 'claude');
+  assert.notEqual(codex.profile, claude.profile);
+  assert.notEqual(codex.session, claude.session);
+  assert.deepEqual(claude, identity({ ...env, PWD: 'another-project' }, 'same-id'));
+  assert.notEqual(claude.profile, identity(env, 'another-conversation').profile);
+});
+test('Claude invocation requires a resolved valid session ID and preserves command arguments', () => {
+  for (const value of ['', '../other', 'a/b', '${CLAUDE_SESSION_ID}', 'id with spaces']) {
+    assert.throws(() => parseInvocation(['--claude-session-id', value, 'info']));
+  }
+  assert.throws(() => parseInvocation(['--claude-session-id']));
+  assert.deepEqual(parseInvocation(['--claude-session-id', 'real-session', 'fill', 'e1', 'hello world']), {
+    claudeSessionId: 'real-session', command: 'fill', commandArgs: ['e1', 'hello world']
+  });
+  assert.deepEqual(parseInvocation(['snapshot']), { claudeSessionId: undefined, command: 'snapshot', commandArgs: [] });
 });
 test('global/destructive/attach commands and profile overrides are rejected', () => {
   const id = identity({ CODEX_THREAD_ID: 'chat' });
