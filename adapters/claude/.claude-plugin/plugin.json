@@ -1,9 +1,11 @@
 {
   "name": "museduo",
   "displayName": "Museduo",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Independent persistent Muse accounts for each Claude Code conversation.",
-  "author": { "name": "Gexingchi" },
+  "author": {
+    "name": "Gexingchi"
+  },
   "license": "MIT",
   "skills": "./skills"
 }

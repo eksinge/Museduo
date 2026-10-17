@@ -1,6 +1,6 @@
 ---
 name: museduo
-description: Use Museduo when the user wants Codex to open different Muse accounts in different conversations. 让 Codex 在不同的对话中打开不同的 Muse 账号。
+description: Use Museduo for separate Muse accounts per Codex conversation, including a standalone 1 to open or 0 to close its browser. 独立账号；使用 Museduo 时发送 1 打开，0 关闭。
 ---
 
 # Museduo
@@ -9,6 +9,15 @@ description: Use Museduo when the user wants Codex to open different Muse accoun
 Let Codex open different Muse accounts in different conversations.
 
 Use the bundled `../../scripts/muse.mjs` relative to this SKILL.md. Resolve it to an absolute path from the loaded skill path. All commands run through the execution host's Node.js using shell execution, for example `node '<absolute-plugin-path>/scripts/muse.mjs' open`.
+
+## Quick messages: 1 / 0
+
+When Museduo is selected or this conversation is using Museduo, treat a user message that is exactly `1` or `0` after trimming surrounding whitespace as an instruction to act:
+
+- `1`: run the wrapper's `1` command (alias for `open`) to open this conversation's visible Muse browser. Check `info` first; run `doctor` on first use or when setup fails. Read a fresh `snapshot` after opening to confirm the page.
+- `0`: run the wrapper's `0` command (alias for `close`) to close only this conversation's browser and preserve its login profile. Report the actual result briefly.
+
+Execute directly within the user's instruction and host permissions. Do not ask what the shortcut means. Keep using the real current conversation ID. Numbers inside code, page text, amounts, or other messages are not shortcuts; respect an unrelated numbered choice in another active task. `open` and `close` remain supported.
 
 ## Identity and isolation
 

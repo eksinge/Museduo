@@ -1,6 +1,6 @@
 {
   "name": "muse-chat-isolation",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "让 Codex / Claude Code 在不同的对话中打开不同的 Muse 账号。 / Let Codex / Claude Code open different Muse accounts in different conversations.",

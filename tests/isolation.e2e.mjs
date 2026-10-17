@@ -55,7 +55,7 @@ async function state(thread, cwd) {
 }
 try {
   await cli(ids[0], ['setup']);
-  await Promise.all(ids.map(id => cli(id, ['open', `${origin}/view`, '--headless'])));
+  await Promise.all(ids.map(id => cli(id, ['1', `${origin}/view`, '--headless'])));
   for (const id of ids) assert.deepEqual(await state(id), { cookie: '', local: null, indexed: null });
   evidence.push('Two concurrent new chats start with empty cookies, localStorage and IndexedDB.');
   await Promise.all([
@@ -70,12 +70,12 @@ try {
   await cli(ids[0], ['open', `${origin}/view`, '--headless']);
   assert.deepEqual(await state(ids[0]), a);
   evidence.push('Opening an already-running chat again keeps the same profile without a lock conflict.');
-  await cli(ids[0], ['close']);
+  await cli(ids[0], ['0']);
   assert.deepEqual(await state(ids[1]), b);
-  evidence.push('Closing chat A does not close or change chat B.');
-  await cli(ids[0], ['open', `${origin}/view`, '--headless'], join(testRoot, 'other-project'));
+  evidence.push('Shortcut 0 closes chat A without closing or changing chat B.');
+  await cli(ids[0], ['1', `${origin}/view`, '--headless'], join(testRoot, 'other-project'));
   assert.deepEqual(await state(ids[0], join(testRoot, 'other-project')), a);
-  evidence.push('Reopened chat A retains all three stores after browser restart and a change of working directory.');
+  evidence.push('Shortcut 1 reopens chat A with all three stores retained after browser restart and a change of working directory.');
   const profiles = ids.map(id => identity({ ...env, CODEX_THREAD_ID: id }, host === 'claude' ? id : undefined).profile);
   assert.notEqual(profiles[0], profiles[1]);
   evidence.push('Browser profile paths are distinct and deterministically derived from thread IDs.');

@@ -44,7 +44,8 @@ export function parseInvocation(args) {
     identity({}, claudeSessionId);
   }
   const [command = 'help', ...commandArgs] = rest;
-  return { claudeSessionId, command, commandArgs };
+  const action = command === '1' ? 'open' : command === '0' ? 'close' : command;
+  return { claudeSessionId, command: action, commandArgs };
 }
 
 export function cleanEnv(env) {
@@ -108,7 +109,7 @@ export async function setup(base) {
 export async function main(args = process.argv.slice(2)) {
   const { claudeSessionId, command, commandArgs: rest } = parseInvocation(args);
   if (command === 'help' || command === '--help') {
-    console.log(`Museduo ${version}\n每个 Codex / Claude Code 对话自动绑定独立持久化 Chrome 资料。\n\nnode <插件路径>/scripts/muse.mjs info       查看当前对话绑定\nnode <插件路径>/scripts/muse.mjs setup      安装锁定版本运行时\nnode <插件路径>/scripts/muse.mjs doctor     检查运行时和浏览器\nnode <插件路径>/scripts/muse.mjs open       打开 Muse，首次请手动登录\nnode <插件路径>/scripts/muse.mjs snapshot   读取当前页面\nnode <插件路径>/scripts/muse.mjs click e12  点击快照中的元素\nnode <插件路径>/scripts/muse.mjs fill e9 文本\nnode <插件路径>/scripts/muse.mjs close      关闭当前对话浏览器，保留登录\n\nopen 可传 URL；open --headless 用于自动化测试。\nClaude Code：在所有命令前加 --claude-session-id <宿主技能展开的真实会话ID>。\n禁止指定其他 session/profile，禁止 close-all、kill-all、attach、delete-data。\n登录密码和验证码由用户在独立浏览器窗口输入。`);
+    console.log(`Museduo ${version}\n每个 Codex / Claude Code 对话自动绑定独立持久化 Chrome 资料。1 = open；0 = close（保留登录）。\n\nnode <插件路径>/scripts/muse.mjs info       查看当前对话绑定\nnode <插件路径>/scripts/muse.mjs setup      安装锁定版本运行时\nnode <插件路径>/scripts/muse.mjs doctor     检查运行时和浏览器\nnode <插件路径>/scripts/muse.mjs open       打开 Muse，首次请手动登录\nnode <插件路径>/scripts/muse.mjs snapshot   读取当前页面\nnode <插件路径>/scripts/muse.mjs click e12  点击快照中的元素\nnode <插件路径>/scripts/muse.mjs fill e9 文本\nnode <插件路径>/scripts/muse.mjs close      关闭当前对话浏览器，保留登录\n\nopen 可传 URL；open --headless 用于自动化测试。\nClaude Code：在所有命令前加 --claude-session-id <宿主技能展开的真实会话ID>。\n禁止指定其他 session/profile，禁止 close-all、kill-all、attach、delete-data。\n登录密码和验证码由用户在独立浏览器窗口输入。`);
     return;
   }
   if (command === 'setup') { await setup(dataRoot()); console.log('运行时已就绪。'); return; }

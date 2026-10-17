@@ -29,6 +29,8 @@ node scripts/install.mjs --host codex
 
 Windows also supports `Install.ps1` (defaults to Codex). The installer merges the Museduo entry into the existing `muse-local` marketplace, installs a versioned source copy and registers it through the Codex CLI. It preserves other catalog entries and does not copy browser data.
 
+The installed Museduo skill recognizes standalone messages `1` (open) and `0` (close, preserving the profile) in conversations using Museduo. The wrapper also accepts `1` and `0` as aliases for `open` and `close`. Carry these triggers into any adapted or rewritten implementation.
+
 Verify the installed manifest's display name is Museduo and the skill is discoverable. Use its absolute installed wrapper path:
 
 ```text
@@ -49,6 +51,8 @@ node scripts/install.mjs --host claude
 This installs a self-contained personal skill at `~/.claude/skills/museduo` (or under `CLAUDE_CONFIG_DIR/skills/museduo` when the user configures that directory). It keeps the wrapper, pinned package files and host-specific SKILL.md together, and does not modify settings.json. A compatibility manifest also lets current Claude Code versions recognize it as a skills-directory plugin named Museduo. Re-running updates a Museduo-owned installation; an unrelated existing skill at that path is left intact and reported.
 
 Invoke `/museduo` in Claude Code (or `/museduo:museduo` if the host displays the plugin namespace). Use the commands from the skill the host actually loads.
+
+Once using Museduo, standalone `1` opens the browser and `0` closes it while preserving the profile. Explicit `/museduo 1` and `/museduo 0` (or their namespaced forms) also supply these skill arguments. Every wrapper invocation still needs the real host-expanded session ID.
 
 **Plugin mode (the supplied manifest):** the loaded skill is `<installation root>/skills/museduo/SKILL.md`, while the scripts are under the installation root. Use `${CLAUDE_PLUGIN_ROOT}`, not the nested skill directory:
 

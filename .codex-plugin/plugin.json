@@ -1,6 +1,6 @@
 {
   "name": "muse-chat-isolation",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "让 Codex / Claude Code 在不同的对话中打开不同的 Muse 账号。 / Let Codex / Claude Code open different Muse accounts in different conversations.",
   "author": {
     "name": "Gexingchi"
@@ -10,7 +10,7 @@
   "interface": {
     "displayName": "Museduo",
     "shortDescription": "多对话多账号 / Multi-chat accounts",
-    "longDescription": "让 Codex / Claude Code 在不同的对话中打开不同的 Muse 账号。 / Let Codex / Claude Code open different Muse accounts in different conversations.",
+    "longDescription": "让 Codex / Claude Code 在不同的对话中打开不同的 Muse 账号。 / Let Codex / Claude Code open different Muse accounts in different conversations. 发送 1 打开，0 关闭并保留登录。 Send 1 to open, 0 to close and keep the login profile.",
     "developerName": "Gexingchi",
     "category": "Productivity",
     "capabilities": [

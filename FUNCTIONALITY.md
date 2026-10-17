@@ -5,6 +5,7 @@
 | Requirement / 要求 | Acceptance / 验收 |
 | --- | --- |
 | 默认名称 / Default name | The installed feature is displayed as **Museduo**; lowercase `museduo` is allowed for host command identifiers. |
+| 数字快捷指令 / Numeric shortcuts | In a conversation using Museduo, a standalone `1` opens that conversation's browser; `0` closes only that browser and preserves the login profile. Both hosts must support these messages and equivalent CLI aliases. Do not interpret numbers in unrelated text or another task's numbered choices as browser commands. |
 | 对话隔离 / Conversation isolation | Two conversations in the same project can log in to different Muse accounts without sharing cookies, localStorage, IndexedDB or browser profiles. |
 | 真实身份 / Real identity | Use the host's real conversation/session ID. No identity means an explicit error, never a shared default profile. |
 | 持久化 / Persistence | Close/reopen or resume the same conversation and retain that conversation's profile, subject to Muse session expiry. |

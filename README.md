@@ -17,6 +17,11 @@ https://github.com/eksinge/Museduo
 
 首次打开后，在专属 Chrome 窗口中手动登录 Muse。另一个对话可以登录另一个账号；恢复同一对话会复用自己的资料，直到 Muse 要求重新认证。
 
+安装并选择 **Museduo** 后，在使用它的对话中直接发送：
+
+- **`1`**：打开当前对话的 Muse 浏览器。
+- **`0`**：关闭当前对话的浏览器，保留登录资料。
+
 ## How to use
 
 Copy this repository URL to Codex / Claude Code and send: **I need this project**.
@@ -29,6 +34,11 @@ I need this project
 You can also ask to install this plugin, migrate it to Codex / Claude Code, or give your coding agent the same features. The agent reads the repository, installs or adapts the feature on your computer, and verifies it. The default local name is **Museduo**.
 
 Sign in manually in the dedicated Chrome window. Other conversations can use other Muse accounts; resuming the same conversation reuses its own profile, subject to Muse session expiry.
+
+After installing and selecting **Museduo**, send a standalone message in that conversation:
+
+- **`1`**: open this conversation's Muse browser.
+- **`0`**: close this conversation's browser and keep its login profile.
 
 ## 给 Codex / Claude Code / For coding agents
 

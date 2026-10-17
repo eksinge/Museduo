@@ -38,6 +38,16 @@ test('Claude invocation requires a resolved valid session ID and preserves comma
   });
   assert.deepEqual(parseInvocation(['snapshot']), { claudeSessionId: undefined, command: 'snapshot', commandArgs: [] });
 });
+test('numeric shortcuts apply only to the action token for both hosts', () => {
+  assert.deepEqual(parseInvocation(['1', 'https://muse.ai/']), { claudeSessionId: undefined, command: 'open', commandArgs: ['https://muse.ai/'] });
+  assert.deepEqual(parseInvocation(['0']), { claudeSessionId: undefined, command: 'close', commandArgs: [] });
+  assert.deepEqual(parseInvocation(['--claude-session-id', 'test-session', '1']), { claudeSessionId: 'test-session', command: 'open', commandArgs: [] });
+  assert.deepEqual(parseInvocation(['--claude-session-id', 'test-session', '0']), { claudeSessionId: 'test-session', command: 'close', commandArgs: [] });
+  assert.deepEqual(parseInvocation(['fill', 'e1', '0']), { claudeSessionId: undefined, command: 'fill', commandArgs: ['e1', '0'] });
+  assert.equal(parseInvocation(['10']).command, '10');
+  assert.equal(parseInvocation(['open']).command, 'open');
+  assert.equal(parseInvocation(['close']).command, 'close');
+});
 test('global/destructive/attach commands and profile overrides are rejected', () => {
   const id = identity({ CODEX_THREAD_ID: 'chat' });
   for (const cmd of ['close-all', 'kill-all', 'attach', 'delete-data', 'show', 'state-load']) assert.throws(() => browserArgs(cmd, [], id, 'config'));
