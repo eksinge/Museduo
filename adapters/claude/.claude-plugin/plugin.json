@@ -1,8 +1,8 @@
 {
   "name": "museduo",
   "displayName": "Museduo",
-  "version": "0.2.2",
-  "description": "Independent persistent Muse accounts for each Claude Code conversation.",
+  "version": "0.3.1",
+  "description": "让 Codex / Claude Code 在 (不同的/一个) 对话中打开不同的 Muse 账号",
   "author": {
     "name": "Gexingchi"
   },

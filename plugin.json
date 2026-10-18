@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "muse-chat-isolation",
-  "version": "0.2.2",
-  "description": "让 Codex / Claude Code 在不同的对话中打开不同的 Muse 账号。 / Let Codex / Claude Code open different Muse accounts in different conversations.",
+  "version": "0.3.1",
+  "description": "让 Codex / Claude Code 在 (不同的/一个) 对话中打开不同的 Muse 账号",
   "author": {
     "name": "Gexingchi"
   },
@@ -17,8 +17,8 @@
     "com.openai": {
       "interface": {
         "displayName": "Museduo",
-        "shortDescription": "多对话多账号 / Multi-chat accounts",
-        "longDescription": "让 Codex / Claude Code 在不同的对话中打开不同的 Muse 账号。 / Let Codex / Claude Code open different Muse accounts in different conversations. 发送 1 打开，0 关闭并保留登录。 Send 1 to open, 0 to close and keep the login profile.",
+        "shortDescription": "单对话多账号 / Multi-account control",
+        "longDescription": "让 Codex / Claude Code 在 (不同的/一个) 对话中打开不同的 Muse 账号。支持单对话多账号和跨对话控制已有窗口。Manage independent accounts and reuse managed windows across conversations.",
         "developerName": "Gexingchi",
         "category": "Productivity",
         "capabilities": [
@@ -27,7 +27,7 @@
         ],
         "logo": "./assets/icon.svg",
         "composerIcon": "./assets/icon.svg",
-        "defaultPrompt": "为这个对话打开独立的 Muse 登录窗口"
+        "defaultPrompt": "列出我的 Muse 账号，管理多个账号或接管其他对话打开的账号窗口"
       }
     }
   },

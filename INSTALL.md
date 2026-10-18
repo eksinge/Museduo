@@ -54,6 +54,8 @@ Invoke `/museduo` in Claude Code (or `/museduo:museduo` if the host displays the
 
 Once using Museduo, standalone `1` opens the browser and `0` closes it while preserving the profile. Explicit `/museduo 1` and `/museduo 0` (or their namespaced forms) also supply these skill arguments. Every wrapper invocation still needs the real host-expanded session ID.
 
+Claude Code and Codex use the same account registry and browser implementation. Only their host identity and installed command prefixes differ. Ordinary Claude web chat cannot install or control local Chrome by reading repository files alone; use Claude Code with access to this computer.
+
 **Plugin mode (the supplied manifest):** the loaded skill is `<installation root>/skills/museduo/SKILL.md`, while the scripts are under the installation root. Use `${CLAUDE_PLUGIN_ROOT}`, not the nested skill directory:
 
 ```text
@@ -68,7 +70,7 @@ These variables are substituted when Claude Code loads a skill. They are not lit
 
 ## 复刻或适配 / Adapt or reimplement
 
-If a host/version/platform cannot use the installer, inspect its current official integration mechanism. Install an equivalent local skill/plugin named Museduo; preserve independent persistent profiles, real conversation identity, same-conversation reuse, manual authentication, browser automation, and scoped closing. Keep a durable installation outside a temporary clone, register it so the host discovers it, and verify through that host. A shared browser tab group is not equivalent.
+If a host/version/platform cannot use the installer, inspect its current official integration mechanism. Install an equivalent local skill/plugin named Museduo; preserve independent persistent profiles, real conversation identity, per-conversation account selection and cross-conversation reuse, manual authentication, browser automation, and scoped closing. Keep a durable installation outside a temporary clone, register it so the host discovers it, and verify through that host. A shared browser tab group is not equivalent.
 
 ## 验证 / Verification
 
@@ -76,9 +78,14 @@ If a host/version/platform cannot use the installer, inspect its current officia
 npm test
 npm run test:e2e
 npm run test:e2e:claude
+npm run test:accounts
+npm run test:accounts:claude
+npm run test:accounts:mixed
 ```
 
 Unit/integration tests cover namespace isolation, invalid session rejection, existing Codex hash compatibility, self-contained installation, repeat installation and preservation of unrelated settings/catalog entries. Browser tests use temporary profiles with synthetic IDs and fake local account values, not Muse credentials. On Windows, a long checkout path can exceed browser storage path limits; set `MUSE_TEST_ROOT` to a shorter scratch directory for these tests only.
+
+The three account suites run from isolated installed bundles, not the source wrapper. Codex/Claude registration is omitted only in these test fixtures to protect the real host settings. They cover same-chat multi-account storage isolation, cross-chat control of an already running legacy window, scoped closing and retained storage after reopening in another conversation. The mixed suite runs one Codex caller and one Claude caller against the same data root in both directions. It verifies browser behavior and caller identity; actual Claude skill discovery must additionally be checked with `claude plugin validate <isolated-install> --strict`, `claude plugin list --json` and `claude plugin details museduo@skills-dir` using an isolated `CLAUDE_CONFIG_DIR`.
 
 Before reporting completion, also perform a real-host discovery check and a harmless browser call using the real current conversation. Distinguish tests using synthetic IDs from proof of live host integration. Manual Muse authentication is a separate user action.
 
@@ -86,3 +93,8 @@ Before reporting completion, also perform a real-host discovery check and a harm
 
 - [Claude Code personal skills and session substitutions](https://code.claude.com/docs/en/skills#available-string-substitutions)
 - [Microsoft Playwright CLI](https://github.com/microsoft/playwright-cli)
+
+
+## Account commands / 账号命令
+
+One conversation may create multiple independent accounts with `account-new "name"`, list managed accounts with `account-list`, and select an existing account with `account-use <ID-or-name>`. Give a legacy account a recognizable name with `account-rename <ID> "name"`. Selecting an existing account does not launch or reload its browser; take a snapshot first and reopen only if it is closed. Use `--account <ID>` before every browser command in multi-account tasks. Never substitute another conversation's host identity. Both hosts have these commands with their own required prefix shown above. `1` / `0` act on the selected account only; closing it affects all conversations using that same window. Default conversation profiles and legacy paths remain compatible.

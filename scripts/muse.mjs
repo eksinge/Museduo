@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { listAccounts, selectedAccount, selectAccount, createAccount, renameAccount, withAccountLock } from './accounts.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
@@ -37,15 +38,23 @@ export function identity(env = process.env, claudeSessionId) {
 export function parseInvocation(args) {
   const rest = [...args];
   let claudeSessionId;
-  if (rest[0] === '--claude-session-id') {
-    rest.shift();
-    claudeSessionId = rest.shift();
-    if (!claudeSessionId || claudeSessionId.startsWith('--')) throw new Error('缺少真实的 Claude Code 会话 ID。');
-    identity({}, claudeSessionId);
+  let accountSelector;
+  while (rest[0] === '--claude-session-id' || rest[0] === '--account') {
+    const option = rest.shift();
+    const value = rest.shift();
+    if (!value || value.startsWith('--')) throw new Error(`缺少 ${option} 的值。`);
+    if (option === '--claude-session-id') {
+      if (claudeSessionId !== undefined) throw new Error('不能重复指定会话 ID。');
+      claudeSessionId = value;
+      identity({}, claudeSessionId);
+    } else {
+      if (accountSelector !== undefined) throw new Error('不能重复指定账号。');
+      accountSelector = value;
+    }
   }
   const [command = 'help', ...commandArgs] = rest;
   const action = command === '1' ? 'open' : command === '0' ? 'close' : command;
-  return { claudeSessionId, command: action, commandArgs };
+  return { claudeSessionId, command: action, commandArgs, ...(accountSelector === undefined ? {} : { accountSelector }) };
 }
 
 export function cleanEnv(env) {
@@ -65,7 +74,7 @@ export function browserArgs(command, args, id, config) {
     if (!rest.length || rest[0].startsWith('--')) rest.unshift(DEFAULT_URL);
     return [`-s=${id.session}`, 'open', ...rest, `--config=${config}`, `--profile=${id.profile}`, '--persistent', ...(headless ? [] : ['--headed'])];
   }
-  if (!allowed.has(command)) throw new Error(`不支持命令 ${command}。跨会话操作、资料删除和外部浏览器连接未开放。运行 help 查看用法。`);
+  if (!allowed.has(command)) throw new Error(`不支持命令 ${command}。请用 account-list / account-use 选择插件账号；资料删除和外部浏览器连接未开放。`);
   return [`-s=${id.session}`, command, ...args];
 }
 
@@ -107,15 +116,29 @@ export async function setup(base) {
 }
 
 export async function main(args = process.argv.slice(2)) {
-  const { claudeSessionId, command, commandArgs: rest } = parseInvocation(args);
+  const { claudeSessionId, accountSelector, command, commandArgs: rest } = parseInvocation(args);
   if (command === 'help' || command === '--help') {
-    console.log(`Museduo ${version}\n每个 Codex / Claude Code 对话自动绑定独立持久化 Chrome 资料。1 = open；0 = close（保留登录）。\n\nnode <插件路径>/scripts/muse.mjs info       查看当前对话绑定\nnode <插件路径>/scripts/muse.mjs setup      安装锁定版本运行时\nnode <插件路径>/scripts/muse.mjs doctor     检查运行时和浏览器\nnode <插件路径>/scripts/muse.mjs open       打开 Muse，首次请手动登录\nnode <插件路径>/scripts/muse.mjs snapshot   读取当前页面\nnode <插件路径>/scripts/muse.mjs click e12  点击快照中的元素\nnode <插件路径>/scripts/muse.mjs fill e9 文本\nnode <插件路径>/scripts/muse.mjs close      关闭当前对话浏览器，保留登录\n\nopen 可传 URL；open --headless 用于自动化测试。\nClaude Code：在所有命令前加 --claude-session-id <宿主技能展开的真实会话ID>。\n禁止指定其他 session/profile，禁止 close-all、kill-all、attach、delete-data。\n登录密码和验证码由用户在独立浏览器窗口输入。`);
+    console.log(`Museduo ${version}\n一个对话管理多个独立账号，也可选择其他对话已有的账号窗口。\n\naccount-list                    列出本机插件账号、名称及来源对话\naccount-new <名称>               创建并选中新账号（随后运行 1 打开登录窗口）\naccount-use <账号ID或名称>        切换当前对话的账号，不打开或重启窗口\naccount-rename <账号ID> <名称>    给旧账号或新账号命名\n--account <账号ID或名称> snapshot 本次命令明确指定账号，不改变当前选择\ninfo                            查看当前选择和真实调用对话\ndoctor                          检查浏览器和运行时\n1 / open                        打开选中账号；首次请手动登录\n0 / close                       仅关闭选中账号窗口并保留登录\nsnapshot / click / fill / press / tab-list / tab-select / goto / screenshot\n\n默认仍使用原对话资料，旧登录自动识别且不搬动。所有账号可跨对话显式选择。\nopen 可传 URL；open --headless 用于测试。全屏默认开启，F11 退出。\nClaude Code：命令前加 --claude-session-id <真实会话ID>。\n不要覆盖 session/profile/config；不要使用 close-all、kill-all、attach、delete-data。\n密码、验证码由用户手动输入；不要提取登录凭据。`);
     return;
   }
   if (command === 'setup') { await setup(dataRoot()); console.log('运行时已就绪。'); return; }
-  const id = identity(process.env, claudeSessionId);
+  const caller = identity(process.env, claudeSessionId);
+  if (command.startsWith('account-')) {
+    if (accountSelector !== undefined) throw new Error('account-* 命令直接接收账号参数，不使用 --account。');
+    let result;
+    if (command === 'account-list' && rest.length === 0) {
+      const current = selectedAccount(caller).accountId;
+      result = { callerHost: caller.host, callerThreadId: caller.threadId, selectedAccountId: current, accounts: listAccounts(caller).map(a => ({ ...a, selected: a.accountId === current, browserState: 'not-checked' })) };
+    } else if (command === 'account-new' && rest.length === 1) result = createAccount(caller, rest[0]);
+    else if (command === 'account-use' && rest.length === 1) result = selectAccount(caller, rest[0]);
+    else if (command === 'account-rename' && rest.length === 2) result = renameAccount(caller, rest[0], rest[1]);
+    else throw new Error('用法：account-list | account-new <名称> | account-use <ID或名称> | account-rename <ID> <名称>');
+    console.log(JSON.stringify(result, null, 2));
+    return;
+  }
+  const id = selectedAccount(caller, accountSelector);
   if (command === 'info') {
-    console.log(JSON.stringify({ ...id, defaultUrl: DEFAULT_URL, runtimeInstalled: existsSync(cliPath(id.base)), mode: `persistent-chrome-per-${id.host}-conversation` }, null, 2));
+    console.log(JSON.stringify({ ...id, callerHost: caller.host, callerThreadId: caller.threadId, defaultAccountId: caller.key, defaultUrl: DEFAULT_URL, runtimeInstalled: existsSync(cliPath(id.base)), mode: 'persistent-chrome-per-account' }, null, 2));
     return;
   }
   const config = join(id.directory, 'browser.json');
@@ -124,19 +147,20 @@ export async function main(args = process.argv.slice(2)) {
   if (command === 'doctor') {
     const chromePaths = process.platform === 'win32' ? [join(process.env.PROGRAMFILES || 'C:/Program Files', 'Google/Chrome/Application/chrome.exe'), join(process.env['PROGRAMFILES(X86)'] || 'C:/Program Files (x86)', 'Google/Chrome/Application/chrome.exe'), join(process.env.LOCALAPPDATA || '', 'Google/Chrome/Application/chrome.exe')] : [];
     const chrome = chromePaths.find(existsSync);
-    console.log(JSON.stringify({ node: process.version, cli, threadId: id.threadId, session: id.session, profile: id.profile, chrome: chrome || '请确认系统已安装 Chrome；macOS/Linux 由 Playwright 按 channel=chrome 查找。', isolation: '独立资料目录；不复制日常浏览器账号' }, null, 2));
+    console.log(JSON.stringify({ node: process.version, cli, callerThreadId: caller.threadId, accountId: id.accountId, name: id.name, session: id.session, profile: id.profile, chrome: chrome || '请确认系统已安装 Chrome；macOS/Linux 由 Playwright 按 channel=chrome 查找。', isolation: '每个账号独立资料；可跨对话显式选择；不复制账号凭据' }, null, 2));
     await run(process.execPath, [cli, '--version'], { env: cleanEnv(process.env) });
     return;
   }
-  mkdirSync(id.directory, { recursive: true, mode: 0o700 });
-  mkdirSync(id.profile, { recursive: true, mode: 0o700 });
-  if (command === 'open') {
-    const headless = rest.includes('--headless');
-    writeFileSync(config, JSON.stringify({ browser: { browserName: 'chromium', isolated: false, userDataDir: id.profile, launchOptions: { channel: 'chrome', headless, args: headless ? [] : ['--start-fullscreen'] }, contextOptions: { viewport: null } }, outputDir: join(id.directory, 'artifacts'), outputMode: 'stdout' }, null, 2), { mode: 0o600 });
-    writeFileSync(join(id.directory, 'binding.json'), JSON.stringify({ threadId: id.threadId, session: id.session, profile: id.profile }, null, 2), { mode: 0o600 });
-  }
-  console.error(`[Muse] 当前对话 ${id.threadId} → ${id.session}`);
-  await run(process.execPath, [cli, ...forwarded], { cwd: id.directory, env: cleanEnv(process.env) });
+  await withAccountLock(id, caller, async () => {
+    mkdirSync(id.profile, { recursive: true, mode: 0o700 });
+    if (command === 'open') {
+      const headless = rest.includes('--headless');
+      writeFileSync(config, JSON.stringify({ browser: { browserName: 'chromium', isolated: false, userDataDir: id.profile, launchOptions: { channel: 'chrome', headless, args: headless ? [] : ['--start-fullscreen'] }, contextOptions: { viewport: null } }, outputDir: join(id.directory, 'artifacts'), outputMode: 'stdout' }, null, 2), { mode: 0o600 });
+      if (id.kind === 'legacy' && !existsSync(join(id.directory, 'binding.json'))) writeFileSync(join(id.directory, 'binding.json'), JSON.stringify({ threadId: id.threadId, session: id.session, profile: id.profile }, null, 2), { mode: 0o600 });
+    }
+    console.error(`[Muse] 调用对话 ${caller.threadId} → 账号 ${id.name} (${id.accountId}) → ${id.session}`);
+    await run(process.execPath, [cli, ...forwarded], { cwd: id.directory, env: cleanEnv(process.env) });
+  });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

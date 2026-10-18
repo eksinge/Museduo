@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { dataRoot } from './muse.mjs';
 
 const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const commonFiles = ['package.json', 'package-lock.json', 'scripts/muse.mjs', 'LICENSE', 'THIRD_PARTY_NOTICES.md'];
+const commonFiles = ['package.json', 'package-lock.json', 'scripts/muse.mjs', 'scripts/accounts.mjs', 'LICENSE', 'THIRD_PARTY_NOTICES.md'];
 const codexFiles = [...commonFiles, 'plugin.json', '.codex-plugin/plugin.json', 'assets/icon.svg', 'skills/museduo/SKILL.md', 'skills/museduo/agents/openai.yaml'];
 const readJson = file => JSON.parse(readFileSync(file, 'utf8'));
 function writeJson(file, value) {

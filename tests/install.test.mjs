@@ -91,3 +91,27 @@ test('ambiguous hosts and malformed marketplace data fail without running setup'
   assert.throws(() => install({ ...options, host: 'codex', run }), /保留原文件/);
   assert.equal(readFileSync(catalogFile, 'utf8'), before);
 });
+
+test('installed Claude and Codex bundles offer the same account commands and share only explicit selections', () => {
+  const options = fixture();
+  const codex = install({ ...options, host: 'codex', run: () => {} });
+  const claude = install({ ...options, host: 'claude', run: () => {} });
+  const env = { ...process.env, MUSE_CHAT_DATA_DIR: options.base, CODEX_THREAD_ID: 'installed-parity-test' };
+  function cli(host, args) {
+    const root = host === 'claude' ? claude.target : codex.target;
+    const prefix = host === 'claude' ? ['--claude-session-id', 'installed-parity-test'] : [];
+    return JSON.parse(execFileSync(process.execPath, [join(root, 'scripts', 'muse.mjs'), ...prefix, ...args], { env, encoding: 'utf8' }));
+  }
+  const original = cli('codex', ['info']);
+  const first = cli('claude', ['account-new', '账号 A']);
+  const second = cli('claude', ['account-new', '账号 B']);
+  assert.notEqual(first.profile, second.profile);
+  assert.equal(cli('codex', ['info']).accountId, original.accountId);
+  assert.equal(cli('codex', ['account-use', first.accountId]).session, first.session);
+  assert.equal(cli('claude', ['info']).accountId, second.accountId);
+  const fromCodex = cli('codex', ['--account', second.accountId, 'info']);
+  assert.equal(fromCodex.callerHost, 'codex');
+  assert.equal(fromCodex.host, 'claude');
+  assert.equal(fromCodex.profile, second.profile);
+  for (const root of [codex.target, claude.target]) assert.ok(existsSync(join(root, 'scripts', 'accounts.mjs')));
+});
