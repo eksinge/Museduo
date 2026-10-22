@@ -78,6 +78,11 @@ export function browserArgs(command, args, id, config) {
   return [`-s=${id.session}`, command, ...args];
 }
 
+// Maximized, not full screen: Chrome's tab strip and the Windows taskbar stay visible.
+export function browserConfig(id, headless) {
+  return { browser: { browserName: 'chromium', isolated: false, userDataDir: id.profile, launchOptions: { channel: 'chrome', headless, args: headless ? [] : ['--start-maximized'] }, contextOptions: { viewport: null } }, outputDir: join(id.directory, 'artifacts'), outputMode: 'stdout' };
+}
+
 function run(command, args, options = {}) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(command, args, { stdio: 'inherit', windowsHide: true, shell: false, ...options });
@@ -118,7 +123,7 @@ export async function setup(base) {
 export async function main(args = process.argv.slice(2)) {
   const { claudeSessionId, accountSelector, command, commandArgs: rest } = parseInvocation(args);
   if (command === 'help' || command === '--help') {
-    console.log(`Museduo ${version}\n一个对话管理多个独立账号，也可选择其他对话已有的账号窗口。\n\naccount-list                    列出本机插件账号、名称及来源对话\naccount-new <名称>               创建并选中新账号（随后运行 1 打开登录窗口）\naccount-use <账号ID或名称>        切换当前对话的账号，不打开或重启窗口\naccount-rename <账号ID> <名称>    给旧账号或新账号命名\n--account <账号ID或名称> snapshot 本次命令明确指定账号，不改变当前选择\ninfo                            查看当前选择和真实调用对话\ndoctor                          检查浏览器和运行时\n1 / open                        打开选中账号；首次请手动登录\n0 / close                       仅关闭选中账号窗口并保留登录\nsnapshot / click / fill / press / tab-list / tab-select / goto / screenshot\n\n默认仍使用原对话资料，旧登录自动识别且不搬动。所有账号可跨对话显式选择。\nopen 可传 URL；open --headless 用于测试。全屏默认开启，F11 退出。\nClaude Code：命令前加 --claude-session-id <真实会话ID>。\n不要覆盖 session/profile/config；不要使用 close-all、kill-all、attach、delete-data。\n密码、验证码由用户手动输入；不要提取登录凭据。`);
+    console.log(`Museduo ${version}\n一个对话管理多个独立账号，也可选择其他对话已有的账号窗口。\n\naccount-list                    列出本机插件账号、名称及来源对话\naccount-new <名称>               创建并选中新账号（随后运行 1 打开登录窗口）\naccount-use <账号ID或名称>        切换当前对话的账号，不打开或重启窗口\naccount-rename <账号ID> <名称>    给旧账号或新账号命名\n--account <账号ID或名称> snapshot 本次命令明确指定账号，不改变当前选择\ninfo                            查看当前选择和真实调用对话\ndoctor                          检查浏览器和运行时\n1 / open                        打开选中账号；首次请手动登录\n0 / close                       仅关闭选中账号窗口并保留登录\nsnapshot / click / fill / press / tab-list / tab-select / goto / screenshot\n\n默认仍使用原对话资料，旧登录自动识别且不搬动。所有账号可跨对话显式选择。\nopen 可传 URL；open --headless 用于测试。窗口默认最大化（非全屏，标签页和任务栏可见）。\nClaude Code：命令前加 --claude-session-id <真实会话ID>。\n不要覆盖 session/profile/config；不要使用 close-all、kill-all、attach、delete-data。\n密码、验证码由用户手动输入；不要提取登录凭据。`);
     return;
   }
   if (command === 'setup') { await setup(dataRoot()); console.log('运行时已就绪。'); return; }
@@ -155,7 +160,7 @@ export async function main(args = process.argv.slice(2)) {
     mkdirSync(id.profile, { recursive: true, mode: 0o700 });
     if (command === 'open') {
       const headless = rest.includes('--headless');
-      writeFileSync(config, JSON.stringify({ browser: { browserName: 'chromium', isolated: false, userDataDir: id.profile, launchOptions: { channel: 'chrome', headless, args: headless ? [] : ['--start-fullscreen'] }, contextOptions: { viewport: null } }, outputDir: join(id.directory, 'artifacts'), outputMode: 'stdout' }, null, 2), { mode: 0o600 });
+      writeFileSync(config, JSON.stringify(browserConfig(id, headless), null, 2), { mode: 0o600 });
       if (id.kind === 'legacy' && !existsSync(join(id.directory, 'binding.json'))) writeFileSync(join(id.directory, 'binding.json'), JSON.stringify({ threadId: id.threadId, session: id.session, profile: id.profile }, null, 2), { mode: 0o600 });
     }
     console.error(`[Muse] 调用对话 ${caller.threadId} → 账号 ${id.name} (${id.accountId}) → ${id.session}`);

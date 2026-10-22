@@ -38,7 +38,7 @@ Codex 与 Claude Code 均支持相同功能。给 Claude Code 仓库地址并说
 
 安装并选择 **Museduo** 后，在使用它的对话中直接发送：
 
-- **`1`**：全屏打开当前选中的账号窗口，按 F11 可退出全屏。
+- **`1`**：以最大化窗口（非全屏，标签页和任务栏仍可见）打开当前选中的账号窗口。
 - **`0`**：只关闭当前选中的账号窗口，保留登录。其他账号窗口继续运行。
 
 同一账号窗口可以被多个对话使用；关闭这个账号的窗口时，这些对话都会看到它已关闭。多个对话不要同时编辑同一个页面；插件会阻止同一账号的命令同时执行。
@@ -60,7 +60,7 @@ Sign in manually in each dedicated account window. Create multiple accounts in o
 
 After installing and selecting **Museduo**, send a standalone message in that conversation:
 
-- **`1`**: open the selected account in full screen; press F11 to exit.
+- **`1`**: open the selected account in a maximized window (not full screen; the tab strip and taskbar stay visible).
 - **`0`**: close only the selected account and retain its profile. Other accounts remain running. Other conversations controlling the same account observe its window closing.
 
 ## 给 Codex / Claude Code / For coding agents
